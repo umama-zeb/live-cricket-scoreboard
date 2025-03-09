@@ -5,24 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Cricket Scoreboard</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: #fff; }
-        .scoreboard { padding: 20px; border: 2px solid #ffcc00; display: inline-block; background: #333; border-radius: 10px; }
-        .team { font-size: 20px; font-weight: bold; }
-        .score { font-size: 24px; color: #ffcc00; }
-        .status { font-size: 18px; margin-top: 10px; }
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: #fff; padding: 20px; }
+        .scoreboard { max-width: 600px; margin: auto; padding: 20px; border-radius: 15px; background: #333; box-shadow: 0px 0px 15px #ffcc00; }
+        .team { font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #ffcc00; }
+        .score { font-size: 30px; font-weight: bold; color: #fff; margin: 10px 0; }
+        .bowler, .batsman, .runrate, .partnership { font-size: 18px; margin-top: 10px; background: #444; padding: 8px; border-radius: 10px; }
+        .player { font-weight: bold; color: #ffcc00; }
+        .logos img, .player-img img { width: 50px; height: 50px; margin: 10px; border-radius: 50%; }
     </style>
 </head>
 <body>
 
     <h1>🏏 Live Cricket Scoreboard</h1>
+    <div class="logos">
+        <img id="team1Logo" src="" alt="Team 1">
+        <img id="team2Logo" src="" alt="Team 2">
+    </div>
     <div class="scoreboard">
         <div class="team" id="match">Loading match...</div>
         <div class="score" id="score">Fetching Score...</div>
+        <div class="runrate">📊 Current RR: <span id="crr">0.00</span> | Required RR: <span id="rrr">0.00</span></div>
+        <div class="batsman">
+            <img id="batsmanImg" class="player-img" src="" alt="Batsman">
+            ⚡ Batsman: <span id="batsman">Loading...</span> | Strike Rate: <span id="strikeRate">0</span>
+        </div>
+        <div class="bowler">
+            <img id="bowlerImg" class="player-img" src="" alt="Bowler">
+            🎯 Bowler: <span id="bowler">Loading...</span> | Economy: <span id="economy">0</span>
+        </div>
+        <div class="partnership">🤝 Partnership: <span id="partnership">0</span> Runs</div>
         <div class="status" id="status">Updating...</div>
     </div>
 
     <script>
-        const API_KEY = "13ee2b3d-b74b-4b04-a3af-ab2767aefd55"; // Use your API key
+        const API_KEY = "13ee2b3d-b74b-4b04-a3af-ab2767aefd55";
         const API_URL = `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}`;
 
         async function fetchLiveScore() {
@@ -32,11 +48,40 @@
                 
                 if (data.status === "success" && data.data.length > 0) {
                     let match = data.data.find(m => m.teams.includes("India") && m.teams.includes("New Zealand"));
-                    
+
                     if (match) {
+                        let team1 = match.teams[0];
+                        let team2 = match.teams[1];
                         let scoreText = `${match.score[0].inning}: ${match.score[0].r}/${match.score[0].w} (${match.score[0].o} overs)`;
-                        document.getElementById('match').innerText = `${match.teams[0]} vs ${match.teams[1]}`;
+
+                        let batsman = match.batsmen[0]?.name || "N/A";
+                        let batsmanImg = match.batsmen[0]?.image || "https://via.placeholder.com/50";
+                        let strikeRate = match.batsmen[0]?.strikeRate || "0";
+                        let bowler = match.bowlers[0]?.name || "N/A";
+                        let bowlerImg = match.bowlers[0]?.image || "https://via.placeholder.com/50";
+                        let economy = match.bowlers[0]?.economy || "0";
+                        let currentRR = (match.score[0]?.r / match.score[0]?.o).toFixed(2) || "0.00";
+                        let requiredRR = match.score[1] ? ((match.score[1]?.r - match.score[0]?.r) / (50 - match.score[0]?.o)).toFixed(2) : "0.00";
+                        let partnership = match.batsmen[0]?.runs || 0;
+
+                        let teamLogos = {
+                            "India": "https://upload.wikimedia.org/wikipedia/en/7/7b/India_national_cricket_team_logo.svg",
+                            "New Zealand": "https://upload.wikimedia.org/wikipedia/en/thumb/a/a3/Cricket_New_Zealand_logo.svg/800px-Cricket_New_Zealand_logo.svg.png"
+                        };
+
+                        document.getElementById('team1Logo').src = teamLogos[team1] || "";
+                        document.getElementById('team2Logo').src = teamLogos[team2] || "";
+                        document.getElementById('match').innerText = `${team1} vs ${team2}`;
                         document.getElementById('score').innerText = scoreText;
+                        document.getElementById('batsman').innerText = batsman;
+                        document.getElementById('batsmanImg').src = batsmanImg;
+                        document.getElementById('strikeRate').innerText = strikeRate;
+                        document.getElementById('bowler').innerText = bowler;
+                        document.getElementById('bowlerImg').src = bowlerImg;
+                        document.getElementById('economy').innerText = economy;
+                        document.getElementById('crr').innerText = currentRR;
+                        document.getElementById('rrr').innerText = requiredRR;
+                        document.getElementById('partnership').innerText = partnership;
                         document.getElementById('status').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
                     } else {
                         document.getElementById('score').innerText = "Match not found!";
@@ -50,7 +95,6 @@
             }
         }
 
-        // Auto-update every 10 seconds
         fetchLiveScore();
         setInterval(fetchLiveScore, 10000);
     </script>
