@@ -40,62 +40,33 @@
     <script>
         const API_KEY = "232a0286-604c-43e5-bbff-27c166b99824";
         const API_URL = `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}`;
+async function fetchLiveScore() {
+    try {
+        let response = await fetch(`https://api.cricapi.com/v1/currentMatches?apikey=232a0286-604c-43e5-bbff-27c166b99824`);
+        let data = await response.json();
+        console.log(data); // This will show API response in the browser console
 
-        async function fetchLiveScore() {
-            try {
-                let response = await fetch(API_URL);
-                let data = await response.json();
-                
-                if (data.status === "success" && data.data.length > 0) {
-                    let match = data.data.find(m => m.teams.includes("India") && m.teams.includes("New Zealand"));
-
-                    if (match) {
-                        let team1 = match.teams[0];
-                        let team2 = match.teams[1];
-                        let scoreText = `${match.score[0].inning}: ${match.score[0].r}/${match.score[0].w} (${match.score[0].o} overs)`;
-
-                        let batsman = match.batsmen[0]?.name || "N/A";
-                        let batsmanImg = match.batsmen[0]?.image || "https://via.placeholder.com/50";
-                        let strikeRate = match.batsmen[0]?.strikeRate || "0";
-                        let bowler = match.bowlers[0]?.name || "N/A";
-                        let bowlerImg = match.bowlers[0]?.image || "https://via.placeholder.com/50";
-                        let economy = match.bowlers[0]?.economy || "0";
-                        let currentRR = (match.score[0]?.r / match.score[0]?.o).toFixed(2) || "0.00";
-                        let requiredRR = match.score[1] ? ((match.score[1]?.r - match.score[0]?.r) / (50 - match.score[0]?.o)).toFixed(2) : "0.00";
-                        let partnership = match.batsmen[0]?.runs || 0;
-
-                        let teamLogos = {
-                            "India": "https://upload.wikimedia.org/wikipedia/en/7/7b/India_national_cricket_team_logo.svg",
-                            "New Zealand": "https://upload.wikimedia.org/wikipedia/en/thumb/a/a3/Cricket_New_Zealand_logo.svg/800px-Cricket_New_Zealand_logo.svg.png"
-                        };
-
-                        document.getElementById('team1Logo').src = teamLogos[team1] || "";
-                        document.getElementById('team2Logo').src = teamLogos[team2] || "";
-                        document.getElementById('match').innerText = `${team1} vs ${team2}`;
-                        document.getElementById('score').innerText = scoreText;
-                        document.getElementById('batsman').innerText = batsman;
-                        document.getElementById('batsmanImg').src = batsmanImg;
-                        document.getElementById('strikeRate').innerText = strikeRate;
-                        document.getElementById('bowler').innerText = bowler;
-                        document.getElementById('bowlerImg').src = bowlerImg;
-                        document.getElementById('economy').innerText = economy;
-                        document.getElementById('crr').innerText = currentRR;
-                        document.getElementById('rrr').innerText = requiredRR;
-                        document.getElementById('partnership').innerText = partnership;
-                        document.getElementById('status').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
-                    } else {
-                        document.getElementById('score').innerText = "Match not found!";
-                    }
-                } else {
-                    document.getElementById('score').innerText = "No live match available!";
-                }
-            } catch (error) {
-                document.getElementById('score').innerText = "Error fetching score!";
-                console.error(error);
-            }
+        if (data.status !== "success") {
+            document.getElementById('score').innerText = "API Error: " + data.reason;
+            return;
         }
 
-        fetchLiveScore();
+        let match = data.data.find(m => m.teams.includes("India") && m.teams.includes("New Zealand"));
+
+        if (!match) {
+            document.getElementById('score').innerText = "No live match found!";
+            return;
+        }
+
+        document.getElementById('score').innerText = "Match found!";
+    } catch (error) {
+        document.getElementById('score').innerText = "Error fetching data!";
+        console.error("Fetch Error:", error);
+    }
+}
+
+fetchLiveScore();
+
         setInterval(fetchLiveScore, 10000);
     </script>
 
