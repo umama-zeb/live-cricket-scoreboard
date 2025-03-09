@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cricket Scoreboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: #fff; }
+        .scoreboard { padding: 20px; border: 2px solid #ffcc00; display: inline-block; background: #333; border-radius: 10px; }
+        .team { font-size: 20px; font-weight: bold; }
+        .score { font-size: 24px; color: #ffcc00; }
+        .status { font-size: 18px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>🏏 Live Cricket Scoreboard</h1>
+    <div class="scoreboard">
+        <div class="team" id="match">Loading match...</div>
+        <div class="score" id="score">Fetching Score...</div>
+        <div class="status" id="status">Updating...</div>
+    </div>
+
+    <script>
+        const API_KEY = "13ee2b3d-b74b-4b04-a3af-ab2767aefd55"; // Use your API key
+        const API_URL = `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}`;
+
+        async function fetchLiveScore() {
+            try {
+                let response = await fetch(API_URL);
+                let data = await response.json();
+                
+                if (data.status === "success" && data.data.length > 0) {
+                    let match = data.data.find(m => m.teams.includes("India") && m.teams.includes("New Zealand"));
+                    
+                    if (match) {
+                        let scoreText = `${match.score[0].inning}: ${match.score[0].r}/${match.score[0].w} (${match.score[0].o} overs)`;
+                        document.getElementById('match').innerText = `${match.teams[0]} vs ${match.teams[1]}`;
+                        document.getElementById('score').innerText = scoreText;
+                        document.getElementById('status').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    } else {
+                        document.getElementById('score').innerText = "Match not found!";
+                    }
+                } else {
+                    document.getElementById('score').innerText = "No live match available!";
+                }
+            } catch (error) {
+                document.getElementById('score').innerText = "Error fetching score!";
+                console.error(error);
+            }
+        }
+
+        // Auto-update every 10 seconds
+        fetchLiveScore();
+        setInterval(fetchLiveScore, 10000);
+    </script>
+
+</body>
+</html>
